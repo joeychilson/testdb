@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 
@@ -27,6 +28,18 @@ func NewPostgres(ctx context.Context, connStr string) (*Postgres, error) {
 		Queries: pgsql.New(conn),
 		pool:    conn,
 	}, nil
+}
+
+func (p *Postgres) Exec(ctx context.Context, query string, args ...interface{}) (pgconn.CommandTag, error) {
+	return p.pool.Exec(ctx, query, args...)
+}
+
+func (p *Postgres) Query(ctx context.Context, query string, args ...interface{}) (pgx.Rows, error) {
+	return p.pool.Query(ctx, query, args...)
+}
+
+func (p *Postgres) QueryRow(ctx context.Context, query string, args ...interface{}) pgx.Row {
+	return p.pool.QueryRow(ctx, query, args...)
 }
 
 func (p *Postgres) Tx(ctx context.Context, fn func(*pgsql.Queries) error) error {
