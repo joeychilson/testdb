@@ -1,8 +1,13 @@
 # testdb
 
-## Overview
+A repo for creating test databases in PostgreSQL and/or MySQL, with tools for testing and debugging code.
 
-A repo for creating test databases in PostgreSQL and/or MySQL, with Go clients for testing and debugging code.
+## Features
+
+- [x] Docker containers for PostgreSQL and MySQL
+- [x] Migrations with dbmate
+- [x] Generate Go code from queries with sqlc
+- [x] Automatically generate fake data for any PostgreSQL table (MySQL coming soon)
 
 ## Requirements
 
@@ -56,6 +61,14 @@ make pgstop or make mystop
 ```bash
 # generate Go code for both PostgreSQL and MySQL queries
 make sqlc
+```
+
+### Generate fake data
+
+```bash
+# generate fake data for any postgres sql tables
+# only supports postgres for now
+go run cmd/main.go generate -amount 10000 -table table_name
 ```
 
 ### Example using generated Go code

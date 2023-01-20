@@ -3,11 +3,12 @@ module github.com/joeychilson/testdb
 go 1.19
 
 require (
-	github.com/brianvoe/gofakeit/v6 v6.20.1
+	github.com/brianvoe/gofakeit v3.18.0+incompatible
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/jackc/pgconn v1.13.0
 	github.com/jackc/pgx/v4 v4.17.2
 	github.com/joho/godotenv v1.4.0
+	github.com/peterbourgon/ff/v3 v3.3.0
 )
 
 require (
