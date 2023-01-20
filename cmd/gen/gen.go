@@ -54,12 +54,6 @@ func (g *GenCmd) Command() *cobra.Command {
 func (g *GenCmd) handleCommand(ctx context.Context, table string, rows int) error {
 	log.Printf("Generating %d rows for table %s", rows, table)
 
-	type Column struct {
-		Name  string
-		Type  string
-		Value interface{}
-	}
-
 	query := `
 		SELECT column_name, data_type 
 		FROM information_schema.columns 
@@ -71,9 +65,9 @@ func (g *GenCmd) handleCommand(ctx context.Context, table string, rows int) erro
 		log.Fatalf("failed to query database: %v", err)
 	}
 
-	columns := make([]Column, 0)
+	columns := make([]*Column, 0)
 	for results.Next() {
-		var c Column
+		c := &Column{}
 		if err := results.Scan(&c.Name, &c.Type); err != nil {
 			log.Printf("failed to scan row: %v", err)
 			continue
@@ -84,30 +78,9 @@ func (g *GenCmd) handleCommand(ctx context.Context, table string, rows int) erro
 		columns = append(columns, c)
 	}
 
-	gofakeit.Seed(0)
-
 	for amount := 0; amount < rows; amount++ {
 		for i := range columns {
-			switch columns[i].Type {
-			case "integer":
-				columns[i].Value = gofakeit.Uint8()
-			case "numeric":
-				columns[i].Value = gofakeit.Float32()
-			case "character varying":
-				columns[i].Value = gofakeit.BuzzWord()
-			case "text":
-				columns[i].Value = gofakeit.BuzzWord()
-			case "boolean":
-				columns[i].Value = gofakeit.Bool()
-			case "date":
-				columns[i].Value = gofakeit.Date()
-			case "timestamp with time zone":
-				columns[i].Value = gofakeit.Date()
-			case "timestamp without time zone":
-				columns[i].Value = gofakeit.Date()
-			default:
-				log.Printf("unknown data type: %s", columns[i].Type)
-			}
+			genValue(columns[i])
 		}
 
 		columnNames := make([]string, len(columns))
@@ -135,4 +108,91 @@ func (g *GenCmd) handleCommand(ctx context.Context, table string, rows int) erro
 
 	log.Printf("Generated %d rows for table %s", rows, table)
 	return nil
+}
+
+type Column struct {
+	Name  string
+	Type  string
+	Value interface{}
+}
+
+func genValue(column *Column) {
+	gofakeit.Seed(0)
+
+	fakers := map[string]func(){
+		"uuid":                        func() { column.Value = gofakeit.UUID() },
+		"character varying":           func() { column.Value = gofakeit.BuzzWord() },
+		"text":                        func() { column.Value = gofakeit.BuzzWord() },
+		"integer":                     func() { column.Value = gofakeit.Int8() },
+		"bigint":                      func() { column.Value = gofakeit.Int32() },
+		"double precision":            func() { column.Value = gofakeit.Float32() },
+		"numeric":                     func() { column.Value = gofakeit.Float32() },
+		"boolean":                     func() { column.Value = gofakeit.Bool() },
+		"inet":                        func() { column.Value = gofakeit.IPv4Address() },
+		"macaddr":                     func() { column.Value = gofakeit.MacAddress() },
+		"bytea":                       func() { column.Value = gofakeit.Letter() },
+		"json":                        func() { column.Value = genJSON() },
+		"jsonb":                       func() { column.Value = genJSON() },
+		"xml":                         func() { column.Value = genXML() },
+		"date":                        func() { column.Value = gofakeit.Date() },
+		"time with time zone":         func() { column.Value = gofakeit.Date() },
+		"time without time zone":      func() { column.Value = gofakeit.Date() },
+		"timestamp with time zone":    func() { column.Value = gofakeit.Date() },
+		"timestamp without time zone": func() { column.Value = gofakeit.Date() },
+	}
+
+	genFunc, ok := fakers[column.Type]
+	if !ok {
+		log.Printf("unknown data type: %s", column.Type)
+		return
+	}
+	genFunc()
+}
+
+func genJSON() []byte {
+	json, err := gofakeit.JSON(&gofakeit.JSONOptions{
+		Type:     "array",
+		RowCount: 1,
+		Indent:   true,
+		Fields: []gofakeit.Field{
+			{
+				Name:     "id",
+				Function: "uuid",
+			},
+			{
+				Name:     "name",
+				Function: "buzzword",
+			},
+		},
+	})
+	if err != nil {
+		log.Printf("error generating json: %s", err)
+		return nil
+	}
+	return json
+}
+
+func genXML() []byte {
+	xml, err := gofakeit.XML(&gofakeit.XMLOptions{
+		Type:          "single",
+		RootElement:   "xml",
+		RecordElement: "record",
+		RowCount:      2,
+		Indent:        true,
+		Fields: []gofakeit.Field{
+			{
+				Name:     "id",
+				Function: "uuid",
+			},
+			{
+				Name:     "name",
+				Function: "buzzword",
+			},
+		},
+	})
+	if err != nil {
+		log.Printf("error generating xml: %s", err)
+		return nil
+	}
+	return xml
 }
