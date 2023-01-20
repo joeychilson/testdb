@@ -12,16 +12,17 @@ import (
 	"github.com/joeychilson/testdb/db"
 )
 
-type GenCmd struct {
+type Config struct {
 	Postgres *db.Postgres
 	MySQL    *db.MySQL
 }
 
-func New(p *db.Postgres, my *db.MySQL) *GenCmd {
-	return &GenCmd{
-		Postgres: p,
-		MySQL:    my,
-	}
+type GenCmd struct {
+	cfg *Config
+}
+
+func New(cfg *Config) *GenCmd {
+	return &GenCmd{cfg: cfg}
 }
 
 func (g *GenCmd) Command() *cobra.Command {
@@ -65,7 +66,7 @@ func (g *GenCmd) handleCommand(ctx context.Context, table string, rows int) erro
 		WHERE table_name = $1
 	`
 
-	results, err := g.Postgres.Query(ctx, query, table)
+	results, err := g.cfg.Postgres.Query(ctx, query, table)
 	if err != nil {
 		log.Fatalf("failed to query database: %v", err)
 	}
@@ -126,7 +127,7 @@ func (g *GenCmd) handleCommand(ctx context.Context, table string, rows int) erro
 				(` + strings.Join(placeholders, ", ") + `)
 		`
 
-		_, err := g.Postgres.Exec(ctx, query, values...)
+		_, err := g.cfg.Postgres.Exec(ctx, query, values...)
 		if err != nil {
 			return fmt.Errorf("failed to insert row into table %s: %v", table, err)
 		}
