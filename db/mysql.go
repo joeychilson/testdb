@@ -29,28 +29,25 @@ func NewMySQL(ctx context.Context, connStr string) (*MySQL, error) {
 	}, nil
 }
 
-func (m *MySQL) Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+func (m *MySQL) Exec(ctx context.Context, query string, args ...any) (sql.Result, error) {
 	return m.db.ExecContext(ctx, query, args...)
 }
 
-func (m *MySQL) Query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+func (m *MySQL) Query(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
 	return m.db.QueryContext(ctx, query, args...)
 }
 
-func (m *MySQL) QueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
+func (m *MySQL) QueryRow(ctx context.Context, query string, args ...any) *sql.Row {
 	return m.db.QueryRowContext(ctx, query, args...)
 }
 
-func (m *MySQL) Tx(ctx context.Context, fn func(*mysql.Queries) error) error {
+func (m *MySQL) Tx(ctx context.Context, fn func(*sql.Tx) error) error {
 	tx, err := m.db.BeginTx(ctx, &sql.TxOptions{})
 	if err != nil {
 		return err
 	}
 
-	qtx := m.WithTx(tx)
-
-	err = fn(qtx)
-
+	err = fn(tx)
 	if err != nil {
 		if rbErr := tx.Rollback(); rbErr != nil {
 			return fmt.Errorf("tx err: %v, rb err: %v", err, rbErr)

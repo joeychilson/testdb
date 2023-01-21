@@ -8,17 +8,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type Config struct {
-	Postgres *db.Postgres
-	MySQL    *db.MySQL
-}
-
 type TablesCmd struct {
-	cfg *Config
+	pg  *db.Postgres
+	sql *db.MySQL
 }
 
-func New(cfg *Config) *TablesCmd {
-	return &TablesCmd{cfg: cfg}
+func New(pg *db.Postgres, sql *db.MySQL) *TablesCmd {
+	return &TablesCmd{pg: pg, sql: sql}
 }
 
 func (t *TablesCmd) Command() *cobra.Command {
@@ -39,7 +35,7 @@ func (t *TablesCmd) handleCommand(ctx context.Context) error {
 		WHERE table_schema = 'public'
 	`
 
-	tables, err := t.cfg.Postgres.Query(ctx, query)
+	tables, err := t.pg.Query(ctx, query)
 	if err != nil {
 		return err
 	}

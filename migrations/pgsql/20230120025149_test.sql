@@ -23,5 +23,15 @@ CREATE TABLE "test" (
 
 );
 
+CREATE TABLE "users" (
+    "id" bigserial PRIMARY KEY,
+    "first_name" varchar,
+    "last_name" varchar,
+    "email" varchar,
+    "created_at" timestamp with time zone,
+    "updated_at" timestamp with time zone
+);
+
 -- migrate:down
 DROP TABLE "test";
+DROP TABLE "users";

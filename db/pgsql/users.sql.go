@@ -22,9 +22,9 @@ type CreateUserParams struct {
 	Email     sql.NullString
 }
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (int32, error) {
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (int64, error) {
 	row := q.db.QueryRow(ctx, createUser, arg.FirstName, arg.LastName, arg.Email)
-	var id int32
+	var id int64
 	err := row.Scan(&id)
 	return id, err
 }

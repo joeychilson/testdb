@@ -12,17 +12,13 @@ import (
 	"github.com/joeychilson/testdb/db"
 )
 
-type Config struct {
-	Postgres *db.Postgres
-	MySQL    *db.MySQL
-}
-
 type GenCmd struct {
-	cfg *Config
+	pg  *db.Postgres
+	sql *db.MySQL
 }
 
-func New(cfg *Config) *GenCmd {
-	return &GenCmd{cfg: cfg}
+func New(pg *db.Postgres, sql *db.MySQL) *GenCmd {
+	return &GenCmd{pg: pg, sql: sql}
 }
 
 func (g *GenCmd) Command() *cobra.Command {
@@ -57,50 +53,43 @@ func (g *GenCmd) handleCommand(ctx context.Context, table string, rows int) erro
 	query := `
 		SELECT column_name, data_type 
 		FROM information_schema.columns 
-		WHERE table_name = $1
-	`
+		WHERE table_name = $1`
 
-	results, err := g.cfg.Postgres.Query(ctx, query, table)
+	results, err := g.pg.Query(ctx, query, table)
 	if err != nil {
 		log.Fatalf("failed to query database: %v", err)
 	}
+	defer results.Close()
 
-	columns := make([]*Column, 0)
+	columns := make([]*column, 0)
 	for results.Next() {
-		c := &Column{}
-		if err := results.Scan(&c.Name, &c.Type); err != nil {
-			log.Printf("failed to scan row: %v", err)
+		c := &column{}
+		if err := results.Scan(&c.name, &c.dataType); err != nil {
 			continue
 		}
-		if c.Name == "id" {
+		if c.name == "id" {
 			continue
 		}
 		columns = append(columns, c)
 	}
 
 	for amount := 0; amount < rows; amount++ {
-		for i := range columns {
-			genValue(columns[i])
-		}
-
 		columnNames := make([]string, len(columns))
 		placeholders := make([]string, len(columns))
-		values := make([]interface{}, len(columns))
+		values := make([]any, len(columns))
 
 		for i := range columns {
-			columnNames[i] = columns[i].Name
+			columnNames[i] = columns[i].name
 			placeholders[i] = fmt.Sprintf("$%d", i+1)
-			values[i] = columns[i].Value
+			values[i] = genValue(columns[i].dataType)
 		}
-
 		query := `
 			INSERT INTO ` + table + ` 
 				(` + strings.Join(columnNames, ", ") + `) 
 			VALUES 
-				(` + strings.Join(placeholders, ", ") + `)
-		`
+				(` + strings.Join(placeholders, ", ") + `)`
 
-		_, err := g.cfg.Postgres.Exec(ctx, query, values...)
+		_, err := g.pg.Exec(ctx, query, values...)
 		if err != nil {
 			return fmt.Errorf("failed to insert row into table %s: %v", table, err)
 		}
@@ -110,43 +99,43 @@ func (g *GenCmd) handleCommand(ctx context.Context, table string, rows int) erro
 	return nil
 }
 
-type Column struct {
-	Name  string
-	Type  string
-	Value interface{}
+type column struct {
+	name     string
+	dataType string
+	value    interface{}
 }
 
-func genValue(column *Column) {
+var fakers = map[string]func() any{
+	"uuid":                        func() any { return gofakeit.UUID() },
+	"character varying":           func() any { return gofakeit.BuzzWord() },
+	"text":                        func() any { return gofakeit.BuzzWord() },
+	"integer":                     func() any { return gofakeit.Int8() },
+	"bigint":                      func() any { return gofakeit.Int32() },
+	"double precision":            func() any { return gofakeit.Float32() },
+	"numeric":                     func() any { return gofakeit.Float32() },
+	"boolean":                     func() any { return gofakeit.Bool() },
+	"inet":                        func() any { return gofakeit.IPv4Address() },
+	"macaddr":                     func() any { return gofakeit.MacAddress() },
+	"bytea":                       func() any { return gofakeit.Letter() },
+	"json":                        func() any { return genJSON() },
+	"jsonb":                       func() any { return genJSON() },
+	"xml":                         func() any { return genXML() },
+	"date":                        func() any { return gofakeit.Date() },
+	"time with time zone":         func() any { return gofakeit.Date() },
+	"time without time zone":      func() any { return gofakeit.Date() },
+	"timestamp with time zone":    func() any { return gofakeit.Date() },
+	"timestamp without time zone": func() any { return gofakeit.Date() },
+}
+
+func genValue(dataType string) any {
 	gofakeit.Seed(0)
 
-	fakers := map[string]func(){
-		"uuid":                        func() { column.Value = gofakeit.UUID() },
-		"character varying":           func() { column.Value = gofakeit.BuzzWord() },
-		"text":                        func() { column.Value = gofakeit.BuzzWord() },
-		"integer":                     func() { column.Value = gofakeit.Int8() },
-		"bigint":                      func() { column.Value = gofakeit.Int32() },
-		"double precision":            func() { column.Value = gofakeit.Float32() },
-		"numeric":                     func() { column.Value = gofakeit.Float32() },
-		"boolean":                     func() { column.Value = gofakeit.Bool() },
-		"inet":                        func() { column.Value = gofakeit.IPv4Address() },
-		"macaddr":                     func() { column.Value = gofakeit.MacAddress() },
-		"bytea":                       func() { column.Value = gofakeit.Letter() },
-		"json":                        func() { column.Value = genJSON() },
-		"jsonb":                       func() { column.Value = genJSON() },
-		"xml":                         func() { column.Value = genXML() },
-		"date":                        func() { column.Value = gofakeit.Date() },
-		"time with time zone":         func() { column.Value = gofakeit.Date() },
-		"time without time zone":      func() { column.Value = gofakeit.Date() },
-		"timestamp with time zone":    func() { column.Value = gofakeit.Date() },
-		"timestamp without time zone": func() { column.Value = gofakeit.Date() },
-	}
-
-	genFunc, ok := fakers[column.Type]
+	genFunc, ok := fakers[dataType]
 	if !ok {
-		log.Printf("unknown data type: %s", column.Type)
-		return
+		log.Printf("unknown data type: %s", dataType)
+		return nil
 	}
-	genFunc()
+	return genFunc()
 }
 
 func genJSON() []byte {

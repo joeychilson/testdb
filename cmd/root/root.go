@@ -20,13 +20,13 @@ func New(config *Config) *cobra.Command {
 		Short: "The TestDB CLI",
 	}
 
-	gencmd := gencmd.New(&gencmd.Config{Postgres: config.Postgres, MySQL: config.MySQL})
+	gencmd := gencmd.New(config.Postgres, config.MySQL)
 	cmd.AddCommand(gencmd.Command())
 
-	tablescmd := tablescmd.New(&tablescmd.Config{Postgres: config.Postgres, MySQL: config.MySQL})
+	tablescmd := tablescmd.New(config.Postgres, config.MySQL)
 	cmd.AddCommand(tablescmd.Command())
 
-	tablecmd := tablecmd.New(&tablecmd.Config{Postgres: config.Postgres, MySQL: config.MySQL})
+	tablecmd := tablecmd.New(config.Postgres, config.MySQL)
 	cmd.AddCommand(tablecmd.Command())
 	return cmd
 }

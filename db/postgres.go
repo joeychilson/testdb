@@ -30,27 +30,25 @@ func NewPostgres(ctx context.Context, connStr string) (*Postgres, error) {
 	}, nil
 }
 
-func (p *Postgres) Exec(ctx context.Context, query string, args ...interface{}) (pgconn.CommandTag, error) {
+func (p *Postgres) Exec(ctx context.Context, query string, args ...any) (pgconn.CommandTag, error) {
 	return p.pool.Exec(ctx, query, args...)
 }
 
-func (p *Postgres) Query(ctx context.Context, query string, args ...interface{}) (pgx.Rows, error) {
+func (p *Postgres) Query(ctx context.Context, query string, args ...any) (pgx.Rows, error) {
 	return p.pool.Query(ctx, query, args...)
 }
 
-func (p *Postgres) QueryRow(ctx context.Context, query string, args ...interface{}) pgx.Row {
+func (p *Postgres) QueryRow(ctx context.Context, query string, args ...any) pgx.Row {
 	return p.pool.QueryRow(ctx, query, args...)
 }
 
-func (p *Postgres) Tx(ctx context.Context, fn func(*pgsql.Queries) error) error {
+func (p *Postgres) Tx(ctx context.Context, fn func(pgx.Tx) error) error {
 	tx, err := p.pool.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		return err
 	}
 
-	qtx := p.Queries.WithTx(tx)
-
-	err = fn(qtx)
+	err = fn(tx)
 	if err != nil {
 		if rbErr := tx.Rollback(ctx); rbErr != nil {
 			return fmt.Errorf("tx err: %v, rb err: %v", err, rbErr)

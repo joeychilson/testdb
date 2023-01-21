@@ -6,11 +6,39 @@ package pgsql
 
 import (
 	"database/sql"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgtype"
 )
 
+type Test struct {
+	ID         int64
+	Uuid       uuid.NullUUID
+	Varchar    sql.NullString
+	Text       sql.NullString
+	Int        sql.NullInt32
+	Bigint     sql.NullInt64
+	Float      sql.NullFloat64
+	Double     sql.NullFloat64
+	Decimal    pgtype.Numeric
+	Boolean    sql.NullBool
+	Inet       pgtype.Inet
+	Macaddr    pgtype.Macaddr
+	Json       pgtype.JSON
+	Jsonb      pgtype.JSONB
+	Xml        interface{}
+	Date       sql.NullTime
+	Time       sql.NullTime
+	Timez      sql.NullTime
+	Timestamp  sql.NullTime
+	Timestampz sql.NullTime
+}
+
 type User struct {
-	ID        int32
+	ID        int64
 	FirstName sql.NullString
 	LastName  sql.NullString
 	Email     sql.NullString
+	CreatedAt sql.NullTime
+	UpdatedAt sql.NullTime
 }
