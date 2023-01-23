@@ -1,15 +1,16 @@
 # testdb
 
-A repo for creating test databases in PostgreSQL and/or MySQL, with tools for testing and debugging code.
+A repo for building test Postgres databases.
 
 **This is mostly for personal use, but feel free to use whatever you want in the repo.**
 
 ## Features
 
-- [x] Docker containers for PostgreSQL and MySQL
+- [x] Docker containers for PostgreSQL
 - [x] Migrations with dbmate
 - [x] Generate Go code from queries with sqlc
-- [x] Automatically generate fake data for any PostgreSQL table (MySQL coming soon)
+- [x] Automatically generate fake data for any PostgreSQL table (uses types, not realistic)
+- [x] Music schema with realistic data generation
 
 ## Requirements
 
