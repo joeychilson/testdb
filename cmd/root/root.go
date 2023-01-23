@@ -3,15 +3,15 @@ package rootcmd
 import (
 	"github.com/spf13/cobra"
 
+	autogencmd "github.com/joeychilson/testdb/cmd/autogen"
+	columnscmd "github.com/joeychilson/testdb/cmd/columns"
 	gencmd "github.com/joeychilson/testdb/cmd/gen"
-	tablecmd "github.com/joeychilson/testdb/cmd/table"
 	tablescmd "github.com/joeychilson/testdb/cmd/tables"
 	"github.com/joeychilson/testdb/db"
 )
 
 type Config struct {
-	Postgres *db.Postgres
-	MySQL    *db.MySQL
+	Database *db.Postgres
 }
 
 func New(config *Config) *cobra.Command {
@@ -20,13 +20,17 @@ func New(config *Config) *cobra.Command {
 		Short: "The TestDB CLI",
 	}
 
-	gencmd := gencmd.New(config.Postgres, config.MySQL)
-	cmd.AddCommand(gencmd.Command())
+	autogencmd := autogencmd.New(config.Database)
+	cmd.AddCommand(autogencmd.Cmd())
 
-	tablescmd := tablescmd.New(config.Postgres, config.MySQL)
-	cmd.AddCommand(tablescmd.Command())
+	columnscmd := columnscmd.New(config.Database)
+	cmd.AddCommand(columnscmd.Cmd())
 
-	tablecmd := tablecmd.New(config.Postgres, config.MySQL)
-	cmd.AddCommand(tablecmd.Command())
+	genCmd := gencmd.New(config.Database)
+	cmd.AddCommand(genCmd.Cmd())
+
+	tablescmd := tablescmd.New(config.Database)
+	cmd.AddCommand(tablescmd.Cmd())
+
 	return cmd
 }

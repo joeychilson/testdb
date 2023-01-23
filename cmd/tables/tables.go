@@ -9,39 +9,38 @@ import (
 )
 
 type TablesCmd struct {
-	pg  *db.Postgres
-	sql *db.MySQL
+	db *db.Postgres
 }
 
-func New(pg *db.Postgres, sql *db.MySQL) *TablesCmd {
-	return &TablesCmd{pg: pg, sql: sql}
+func New(db *db.Postgres) *TablesCmd {
+	return &TablesCmd{db: db}
 }
 
-func (t *TablesCmd) Command() *cobra.Command {
+func (t *TablesCmd) Cmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tables [flags]",
 		Short: "List all tables in the database",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return t.handleCommand(cmd.Context())
+			return t.handleCmd(cmd.Context())
 		},
 	}
 	return cmd
 }
 
-func (t *TablesCmd) handleCommand(ctx context.Context) error {
+func (t *TablesCmd) handleCmd(ctx context.Context) error {
 	query := `
 		SELECT table_name
 		FROM information_schema.tables
 		WHERE table_schema = 'public'
 	`
 
-	tables, err := t.pg.Query(ctx, query)
+	tables, err := t.db.Query(ctx, query)
 	if err != nil {
 		return err
 	}
 
 	fmt.Println("Tables:")
-	fmt.Println("-------")
+	fmt.Println("-------------------------------")
 	for tables.Next() {
 		var tableName string
 		if err := tables.Scan(&tableName); err != nil {

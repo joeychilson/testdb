@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -11,18 +12,25 @@ import (
 )
 
 func main() {
-	_ = godotenv.Load()
+	err := godotenv.Load()
+	if err != nil {
+		log.Printf("failed to load .env file: %v", err)
+		os.Exit(1)
+	}
 
-	postgres, _ := db.NewPostgres(context.Background(), os.Getenv("POSTGRES_URL"))
-	mysql, _ := db.NewMySQL(context.Background(), os.Getenv("MYSQL_URL"))
+	db, err := db.NewPostgres(context.Background(), os.Getenv("POSTGRES_URL"))
+	if err != nil {
+		log.Printf("failed to connect to postgres: %v", err)
+		os.Exit(1)
+	}
 
 	config := &rootcmd.Config{
-		Postgres: postgres,
-		MySQL:    mysql,
+		Database: db,
 	}
 
 	rootcmd := rootcmd.New(config)
 	if err := rootcmd.Execute(); err != nil {
+		log.Printf("failed to execute root command: %v", err)
 		os.Exit(1)
 	}
 }

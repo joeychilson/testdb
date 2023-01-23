@@ -3,41 +3,23 @@ ifneq (,$(wildcard ./.env))
     export
 endif
 
-myup:
-	docker-compose -f "docker-compose.mysql.yml" up -d
+up:
+	docker-compose up -d
 
-mydown:
-	docker-compose -f "docker-compose.mysql.yml" down
+down:
+	docker-compose down
 
-mystop:
-	docker-compose -f "docker-compose.mysql.yml" stop
+stop:
+	docker-compose stop
 
-mydbup:
-	dbmate -u ${MYSQL_URL} -d ./migrations/mysql up
+dbup:
+	dbmate -u ${POSTGRES_URL} -d ./migrations up
 
-mydbdown:
-	dbmate -u ${MYSQL_URL} -d ./migrations/mysql down
+dbdown:
+	dbmate -u ${POSTGRES_URL} -d ./migrations down
 
-mydbnew:
-	dbmate -d ./migrations/mysql new $(name)
-
-pgup:
-	docker-compose -f "docker-compose.pgsql.yml" up -d
-
-pgdown:
-	docker-compose -f "docker-compose.pgsql.yml" down
-
-pgstop:
-	docker-compose -f "docker-compose.pgsql.yml" stop
-
-pgdbup:
-	dbmate -u ${POSTGRES_URL} -d ./migrations/pgsql up
-
-pgdbdown:
-	dbmate -u ${POSTGRES_URL} -d ./migrations/pgsql down
-
-pgdbnew:
-	dbmate -d ./migrations/pgsql new $(name)
+dbnew:
+	dbmate -d ./migrations new $(name)
 
 sqlc:
 	sqlc generate

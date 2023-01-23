@@ -2,7 +2,7 @@
 // versions:
 //   sqlc v1.16.0
 
-package pgsql
+package sqlc
 
 import (
 	"database/sql"
@@ -10,6 +10,30 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgtype"
 )
+
+type Album struct {
+	ID       int64
+	ArtistID int64
+	Name     string
+	Cover    string
+}
+
+type Artist struct {
+	ID    int64
+	Name  string
+	Image sql.NullString
+}
+
+type Song struct {
+	ID       int64
+	AlbumID  int64
+	ArtistID int64
+	Title    string
+	Length   float64
+	Track    sql.NullInt32
+	Path     string
+	Mtime    int32
+}
 
 type Test struct {
 	ID         int64
@@ -32,13 +56,4 @@ type Test struct {
 	Timez      sql.NullTime
 	Timestamp  sql.NullTime
 	Timestampz sql.NullTime
-}
-
-type User struct {
-	ID        int64
-	FirstName sql.NullString
-	LastName  sql.NullString
-	Email     sql.NullString
-	CreatedAt sql.NullTime
-	UpdatedAt sql.NullTime
 }

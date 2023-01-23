@@ -1,17 +1,10 @@
 version: "2"
 sql:
-  - schema: "./migrations/pgsql/"
-    queries: "./queries/pgsql/"
+  - schema: "./migrations/"
+    queries: "./queries/"
     engine: "postgresql"
     gen:
       go:
-        package: "pgsql"
-        out: "./db/pgsql/"
+        package: "sqlc"
+        out: "./db/sqlc"
         sql_package: "pgx/v4"
-  - schema: "./migrations/mysql/"
-    queries: "./queries/mysql/"
-    engine: "mysql"
-    gen:
-      go:
-        package: "mysql"
-        out: "./db/mysql/"

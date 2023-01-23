@@ -8,11 +8,11 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 
-	"github.com/joeychilson/testdb/db/pgsql"
+	"github.com/joeychilson/testdb/db/sqlc"
 )
 
 type Postgres struct {
-	*pgsql.Queries
+	*sqlc.Queries
 	pool *pgxpool.Pool
 }
 
@@ -25,7 +25,7 @@ func NewPostgres(ctx context.Context, connStr string) (*Postgres, error) {
 		return nil, err
 	}
 	return &Postgres{
-		Queries: pgsql.New(conn),
+		Queries: sqlc.New(conn),
 		pool:    conn,
 	}, nil
 }

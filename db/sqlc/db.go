@@ -2,7 +2,7 @@
 // versions:
 //   sqlc v1.16.0
 
-package pgsql
+package sqlc
 
 import (
 	"context"

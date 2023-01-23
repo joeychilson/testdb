@@ -8,25 +8,24 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type TableCmd struct {
-	pg  *db.Postgres
-	sql *db.MySQL
+type ColumnsCmd struct {
+	db *db.Postgres
 }
 
-func New(pg *db.Postgres, sql *db.MySQL) *TableCmd {
-	return &TableCmd{pg: pg, sql: sql}
+func New(db *db.Postgres) *ColumnsCmd {
+	return &ColumnsCmd{db: db}
 }
 
-func (t *TableCmd) Command() *cobra.Command {
+func (c *ColumnsCmd) Cmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "table [flags]",
+		Use:   "columns [flags]",
 		Short: "List all columns in a table",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			table, err := cmd.Flags().GetString("table")
 			if err != nil {
 				return err
 			}
-			return t.handleCommand(cmd.Context(), table)
+			return c.handleCmd(cmd.Context(), table)
 		},
 	}
 
@@ -35,20 +34,20 @@ func (t *TableCmd) Command() *cobra.Command {
 	return cmd
 }
 
-func (t *TableCmd) handleCommand(ctx context.Context, table string) error {
+func (c *ColumnsCmd) handleCmd(ctx context.Context, table string) error {
 	query := `
 		SELECT column_name, data_type
 		FROM information_schema.columns
 		WHERE table_name = $1
 	`
 
-	columns, err := t.pg.Query(ctx, query, table)
+	columns, err := c.db.Query(ctx, query, table)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("Table %q:\n", table)
-	fmt.Println("-------------------------------------------")
+	fmt.Printf("Columns for %q:\n", table)
+	fmt.Println("-------------------------------")
 	for columns.Next() {
 		var columnName, dataType string
 		if err := columns.Scan(&columnName, &dataType); err != nil {

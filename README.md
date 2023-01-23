@@ -2,6 +2,8 @@
 
 A repo for creating test databases in PostgreSQL and/or MySQL, with tools for testing and debugging code.
 
+**This is mostly for personal use, but feel free to use whatever you want in the repo.**
+
 ## Features
 
 - [x] Docker containers for PostgreSQL and MySQL
@@ -25,7 +27,7 @@ git clone https://github.com/joeychilson/testdb
 ### Setup
 
 ```bash
-# contains POSTGRES_URL, and MYSQL_URL for containers
+# contains POSTGRES_URL for containers
 cp .env.example .env
 ```
 
@@ -33,13 +35,13 @@ cp .env.example .env
 
 ```bash
 # create new migration file
-make pgdbnew name={migration_name} or make mydbnew name={migration_name}
+make dbnew name={migration_name}
 
 # migrates database to latest version
-make pgdbup or make mydbup
+make dbup
 
 # migrates database to previous version
-make pgdbdown or make mydbdown
+make dbdown
 
 ```
 
@@ -47,13 +49,13 @@ make pgdbdown or make mydbdown
 
 ```bash
 # start docker container
-make pgup or make myup
+make up
 
 # stop docker container
-make pgdown or make mydown
+make down
 
 # destory docker container
-make pgstop or make mystop
+make stop
 ```
 
 ### Generate Go code
@@ -68,7 +70,11 @@ make sqlc
 ```bash
 # generate fake data for any postgres sql tables
 # only supports postgres for now
-go run cmd/main.go generate -amount 10000 -table table_name
+go run cmd/main.go autogen -t table_name -r 100
+
+# generate realistic date for music schema
+# this will generate 2 artists, 3 albums per artist, and 8 songs per album
+go run cmd/main.go gen music -r 2 -a 3 -s 8
 ```
 
 ### Example using generated Go code
@@ -86,13 +92,12 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/joeychilson/testdb/db"
-	"github.com/joeychilson/testdb/db/pgsql"
+	"github.com/joeychilson/testdb/db/sqlc"
 )
 
-type User struct {
-	FirstName string `fake:"{firstname}"`
-	LastName  string `fake:"{lastname}"`
-	Email     string `fake:"{email}"`
+type Artist struct {
+	Name  string `fake:"{name}"`
+	Image string `fake:"{imageurl}"`
 }
 
 func main() {
@@ -105,20 +110,21 @@ func main() {
 		log.Fatalf("failed to connect to database: %v", err)
 	}
 
-	var u User
-	gofakeit.Struct(&u)
+	gofakeit.Seed(0)
 
-	params := pgsql.CreateUserParams{
-		FirstName: sql.NullString{String: u.FirstName, Valid: u.FirstName != ""},
-		LastName:  sql.NullString{String: u.LastName, Valid: u.LastName != ""},
-		Email:     sql.NullString{String: u.Email, Valid: u.Email != ""},
+	var genArtist *gen.Artist
+	gofakeit.Struct(&genArtist)
+
+	artist := sqlc.CreateArtistParams{
+		Name:  genArtist.Name,
+		Image: sql.NullString{String: genArtist.Image, Valid: genArtist.Image != ""},
 	}
 
-	id, err := db.Queries.CreateUser(ctx, params)
+	artistsID, err := g.db.CreateArtist(ctx, artist)
 	if err != nil {
-		log.Fatalf("failed to create user: %v", err)
+		log.Fatalf("failed to create artist: %v", err)
 	}
 
-	log.Printf("created user with id: %d", id)
+	log.Printf("Created artist %s with ID", genArtist.Name, artistsID)
 }
 ```
