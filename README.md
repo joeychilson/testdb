@@ -93,12 +93,8 @@ import (
 
 	"github.com/joeychilson/testdb/db"
 	"github.com/joeychilson/testdb/db/sqlc"
+	"github.com/joeychilson/testdb/gen"
 )
-
-type Artist struct {
-	Name  string `fake:"{name}"`
-	Image string `fake:"{imageurl}"`
-}
 
 func main() {
 	ctx := context.Background()
