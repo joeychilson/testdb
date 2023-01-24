@@ -7,7 +7,7 @@ import (
 
 	"github.com/joho/godotenv"
 
-	rootcmd "github.com/joeychilson/testdb/cmd/root"
+	rootcmd "github.com/joeychilson/testdb/cmd"
 	"github.com/joeychilson/testdb/db"
 )
 
