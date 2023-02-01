@@ -6,6 +6,7 @@ package sqlc
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgtype"
@@ -22,6 +23,18 @@ type Artist struct {
 	ID    int64
 	Name  string
 	Image sql.NullString
+}
+
+type Person struct {
+	ID        int32
+	FirstName string
+	LastName  string
+	FullName  string
+	Age       int32
+	Salary    pgtype.Numeric
+	StartDate time.Time
+	Phone     pgtype.JSON
+	Languages []string
 }
 
 type Song struct {

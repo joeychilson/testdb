@@ -21,5 +21,8 @@ func (g *GenCmd) Cmd() *cobra.Command {
 
 	musicGenCmd := NewMusicGen(g.db)
 	cmd.AddCommand(musicGenCmd.MusicGenCommand())
+
+	peopleGenCmd := NewPeopleGen(g.db)
+	cmd.AddCommand(peopleGenCmd.PeopleGenCommand())
 	return cmd
 }
